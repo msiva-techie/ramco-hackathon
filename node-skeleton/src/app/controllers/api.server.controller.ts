@@ -1,5 +1,8 @@
-import { Shop, DeliveryBoy } from './../../schema/schema';
 const kmeans = require('node-kmeans');
+const MongoClient = require('mongodb').MongoClient;
+const url = 'mongodb://localhost:27017';
+const axios = require('axios');
+// const util = require('util');
 // const eloRank = require('elo-rank');
 
 /**
@@ -14,37 +17,37 @@ export const helloWorld = function(req, res) {
 };
 
 // eslint-disable-next-line require-jsdoc
-function sendError(err, res) {
-    console.log('Error.....', err);
-    return res.jsonp({
-        err,
-        user: 0,
-        message: 'Error occured...'
-    });
-}
+// function sendError(err, res) {
+//     console.log('Error.....', err);
+//     return res.jsonp({
+//         err,
+//         user: 0,
+//         message: 'Error occured...'
+//     });
+// }
 
 export const getKmeans = function(req, res) {
-    Shop.find({}, function(err, data) {
-        if (err) {
-            return sendError(err, res);
-        }
-        // Create the data 2D-array (vectors) describing the data
-        let vectors = [];
-        console.log('data.....', data);
-        for (let i = 0; i < data.length; i++) {
-            vectors[i] = [data[i]['coordinates'][0], data[i]['coordinates'][1]];
-        }
-        kmeans.clusterize(vectors, { k: 6 }, (err, response) => {
-            if (err) {
-                console.error(err);
-            } else {
-                console.log('%o', response);
-                res.jsonp({
-                    response
-                });
-            }
-        });
-    });
+    // Shop.find({}, function(err, data) {
+    //     if (err) {
+    //         return sendError(err, res);
+    //     }
+    //     // Create the data 2D-array (vectors) describing the data
+    //     let vectors = [];
+    //     console.log('data.....', data);
+    //     for (let i = 0; i < data.length; i++) {
+    //         vectors[i] = [data[i]['coordinates'][0], data[i]['coordinates'][1]];
+    //     }
+    //     kmeans.clusterize(vectors, { k: 6 }, (err, response) => {
+    //         if (err) {
+    //             console.error(err);
+    //         } else {
+    //             console.log('%o', response);
+    //             res.jsonp({
+    //                 response
+    //             });
+    //         }
+    //     });
+    // });
 };
 
 export const getEloRating = function() {
@@ -64,47 +67,54 @@ export const getEloRating = function() {
     playerB = elo.updateRating(expectedScoreB, 0, playerB);
 };
 
-export const getResult = function(req, res) {
+export const getResult = async function(req, res) {
     // latitude, longitude, product, quantity
     // DD = d + (min/60) + (sec/3600)
     // (x - center_x)^2 + (y - center_y)^2 < radius^2
     // Value from Shop (retail outlet) db
-    Shop.find(
-        {
-            products: {
-                $elemMatch: {
-                    productName: {
-                        $in: [req.body.product],
-                        stock: {
-                            $gte: req.body.quantity
+    MongoClient.connect(url, async function(err, client) {
+        if (err) {
+            res.jsonp({
+                err: err.toString()
+            });
+        }
+        try {
+            console.log('Connected successfully to server');
+            const db = client.db('hackathon');
+            // Find some documents
+            console.log('product...', req.body.product);
+            let data = await db
+                .collection('Shop')
+                .find({
+                    products: {
+                        $elemMatch: {
+                            name: req.body.product,
+                            stock: {
+                                $gte: req.body.quantity
+                            }
                         }
                     }
-                }
-            }
-        },
-        function(err, data) {
-            if (err) {
-                res.jsonp({
-                    err
-                });
-            }
+                })
+                .toArray();
+            console.log('Found the following records');
+            console.log(data[0].products[0]);
             // Create the data 2D-array (vectors) describing the data
             let vectors = [];
-            console.log('data.....', data);
+            console.log('111111.....', data);
             for (let i = 0; i < data.length; i++) {
-                vectors[i] = [
-                    data[i]['coordinates'][0],
-                    data[i]['coordinates'][1]
-                ];
+                vectors[i] = [data[i]['location'][0], data[i]['location'][1]];
             }
             // vectors.push([latitude, longitude]);
-            kmeans.clusterize(vectors, { k: 6 }, (err, response) => {
+            console.log('kmeans....', vectors);
+            let k = vectors.length <= 4 ? 1 : 4;
+            kmeans.clusterize(vectors, { k }, async (err, response) => {
                 if (err) {
                     res.jsonp({
                         err
                     });
                 }
                 let distanceObj = [];
+                console.log('response.....', response);
                 // Finding the distance between centroids and user location
                 for (let obj of response) {
                     distanceObj.push({
@@ -125,7 +135,7 @@ export const getResult = function(req, res) {
                 // let initial = distanceObj[0]
                 // let minInsideCluster = [];
                 distanceObj[0].cluster.sort((a, b) => (a > b ? 1 : -1));
-
+                console.log('distanceObj...', distanceObj[0].cluster);
                 let radiusPoints = [];
                 distanceObj[0].cluster.forEach(element => {
                     radiusPoints.push({
@@ -143,72 +153,116 @@ export const getResult = function(req, res) {
                     });
                 });
                 radiusPoints.sort((a, b) => (a.distance < b.distance ? 1 : -1));
+                console.log('radiusPoints...', radiusPoints);
                 let radius = radiusPoints[0].distance; // radius of cluster
+                console.log('radius...', radius);
                 // resolve(distanceObj[0].cluster[0]);
-
                 // check whether deliveryboy location is in cluster
-                DeliveryBoy.find({}, function(err, data) {
-                    if (err) {
-                        res.jsonp({
-                            err
+                data = await db
+                    .collection('DeliveryBoy')
+                    .find({})
+                    .toArray();
+                // console.log('available delivery boys....', data);
+                let deliveryBoyInsideCluster = [];
+                data.forEach(elem => {
+                    let x =
+                        Math.pow(
+                            elem.location[0] - distanceObj[0].centroid[0],
+                            2
+                        ) +
+                            Math.pow(
+                                elem.location[1] - distanceObj[0].centroid[1],
+                                2
+                            ) <
+                        Math.pow(radius, 2);
+                    if (x) {
+                        deliveryBoyInsideCluster.push(elem);
+                    }
+                });
+                let areaOfTriangle = [];
+                console.log(
+                    'deliveryBoyInsideCluster....',
+                    deliveryBoyInsideCluster
+                );
+                for (let i = 0; i < distanceObj[0].cluster.length; i++) {
+                    for (let j = 0; j < deliveryBoyInsideCluster.length; j++) {
+                        let area =
+                            0.5 *
+                            (deliveryBoyInsideCluster[j].location[0] *
+                                (distanceObj[0].cluster[i][1] -
+                                    req.body.longitude) +
+                                distanceObj[0].cluster[i][0] *
+                                    (req.body.longitude -
+                                        deliveryBoyInsideCluster[j]
+                                            .location[1]) +
+                                req.body.latitude *
+                                    (deliveryBoyInsideCluster[j].location[1] -
+                                        distanceObj[0].cluster[i][1])); // area of triangle
+
+                        areaOfTriangle.push({
+                            area: area,
+                            shop: distanceObj[0].cluster[i],
+                            deliveryBoy: deliveryBoyInsideCluster[j]
                         });
                     }
-                    let deliveryBoyInsideCluster = [];
-                    data.forEach(elem => {
-                        let x =
-                            Math.pow(
-                                elem.location[0] - distanceObj[0].centroid[0],
-                                2
-                            ) +
-                                Math.pow(
-                                    elem.location[1] -
-                                        distanceObj[0].centroid[1],
-                                    2
-                                ) <
-                            Math.pow(radius, 2);
-                        if (x) {
-                            deliveryBoyInsideCluster.push(elem);
-                        }
-                        let areaOfTriangle = [];
-                        for (
-                            let i = 0;
-                            i < distanceObj[0].cluster.length;
-                            i++
-                        ) {
-                            for (
-                                let j = 0;
-                                j < deliveryBoyInsideCluster.length;
-                                j++
-                            ) {
-                                let area =
-                                    0.5 *
-                                    (deliveryBoyInsideCluster[j][0] *
-                                        (distanceObj[0].cluster[i][1] -
-                                            req.body.longitude) +
-                                        distanceObj[0].cluster[i][0] *
-                                            (req.body.longitude -
-                                                deliveryBoyInsideCluster[
-                                                    j
-                                                ][1]) +
-                                        req.body.latitude *
-                                            (deliveryBoyInsideCluster[j][1] -
-                                                distanceObj[0].cluster[i][1])); // area of triangle
-                                areaOfTriangle.push({
-                                    area,
-                                    shop: distanceObj[0].cluster[i],
-                                    devileryBoy: deliveryBoyInsideCluster[j]
-                                });
-                            }
-                        }
-                        areaOfTriangle.sort((a, b) =>
-                            a.area > b.area ? 1 : -1
+                }
+                areaOfTriangle.sort((a, b) => (a.area > b.area ? 1 : -1));
+                console.log(areaOfTriangle);
+                console.log('result..', areaOfTriangle[0]);
+                // console.log('result2......', Math.abs(areaOfTriangle[0]));
+                let d1, d2, t1, t2;
+                axios
+                    .post(
+                        `https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].deliveryBoy.location[0]},${areaOfTriangle[0].deliveryBoy.location[1]}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`,
+                        {}
+                    )
+                    .then(function(response) {
+                        console.log(
+                            'location111....',
+                            response.data.response.route[0].summary
                         );
-                        res.jsonp({
-                            result: areaOfTriangle[0]
-                        });
+                        d1 =
+                            response.data.response.route[0].summary.distance /
+                            1000;
+                        t1 =
+                            response.data.response.route[0].summary.travelTime /
+                            60;
                     });
+                axios
+                    .post(
+                        `https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${req.body.latitude},${req.body.longitude}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`,
+                        {}
+                    )
+                    .then(function(response) {
+                        console.log(
+                            'location',
+                            response.data.response.route[0].summary
+                        );
+                        d2 =
+                            response.data.response.route[0].summary.distance /
+                            1000;
+                        t2 =
+                            response.data.response.route[0].summary.travelTime /
+                            60;
+                    });
+                console.log('d1', d1);
+                console.log('d2', d2);
+                console.log('t1', t1);
+                console.log('t1', t2);
+
+                res.jsonp({
+                    distance: d1 + d2,
+                    ETA: t1 + t2,
+                    location: response.data.response,
+                    result: areaOfTriangle[0]
                 });
             });
+        } catch (err) {
+            res.jsonp({
+                err: err.toString()
+            });
+        } finally {
+            // client.close();
         }
-    );
+    });
 };
