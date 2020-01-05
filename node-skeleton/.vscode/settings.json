@@ -24,5 +24,8 @@
   ],
   "telemetry.enableCrashReporter": false,
 "telemetry.enableTelemetry": false,
-"editor.insertSpaces": false
+"editor.insertSpaces": false,
+"editor.codeActionsOnSave": {
+	"source.fixAll.eslint": true
+}
 }

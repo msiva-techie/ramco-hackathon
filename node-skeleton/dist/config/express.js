@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 let fs = require('fs'), http = require('http'), https = require('https'), path = require('path');
 let express = require('express'), bodyParser = require('body-parser'), methodOverride = require('method-override'), helmet = require('helmet'), mustacheExpress = require('mustache-express'), xss = require('xss-clean'), swaggerUi = require('swagger-ui-express'), YAML = require('yamljs'), glob = require('glob');
+const cors = require('cors');
 const config_1 = require("../config/config");
 const error_utils_1 = require("../app/utils/error.utils");
 module.exports = function () {
@@ -60,6 +61,12 @@ module.exports = function () {
         const swaggerDocument = YAML.load(path.join(__dirname, '../../apidoc.yaml'));
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     }
+    const corsOptions = {
+        origin: 'http://localhost:3000',
+        credentials: true,
+        optionsSuccessStatus: 200
+    };
+    app.use(cors(corsOptions));
     glob.sync('./**/routes/**/*.js').forEach(function (routePath) {
         require(path.resolve(routePath))(app);
     });

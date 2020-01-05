@@ -18,6 +18,7 @@ let express = require('express'),
     swaggerUi = require('swagger-ui-express'),
     YAML = require('yamljs'),
     glob = require('glob');
+const cors = require('cors');
 
 import { config } from '../config/config';
 import { log } from '../app/utils/error.utils';
@@ -109,7 +110,12 @@ module.exports = function() {
         );
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     }
-
+    const corsOptions = {
+        origin: 'http://localhost:3000',
+        credentials: true,
+        optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+    };
+    app.use(cors(corsOptions));
     // Globbing routing files
     glob.sync('./**/routes/**/*.js').forEach(function(routePath) {
         require(path.resolve(routePath))(app);

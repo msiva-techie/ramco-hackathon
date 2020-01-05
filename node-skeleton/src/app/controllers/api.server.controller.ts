@@ -72,6 +72,7 @@ export const getResult = async function(req, res) {
     // DD = d + (min/60) + (sec/3600)
     // (x - center_x)^2 + (y - center_y)^2 < radius^2
     // Value from Shop (retail outlet) db
+    console.log('req.body....', req.body);
     MongoClient.connect(url, async function(err, client) {
         if (err) {
             res.jsonp({
@@ -97,7 +98,7 @@ export const getResult = async function(req, res) {
                 })
                 .toArray();
             console.log('Found the following records');
-            console.log(data[0].products[0]);
+            // console.log(data[0].products[0]);
             // Create the data 2D-array (vectors) describing the data
             let vectors = [];
             console.log('111111.....', data);

@@ -12,6 +12,8 @@ import { Register } from "./components/register/Register";
 import "./App.css";
 import { isAuthenticated } from "./services/AuthenticationService";
 import Logout from "./components/logout/Logout";
+import Product from "./components/product/Product";
+import Order from "./components/order/Order";
 // (function() {
 // 	const token = getToken();
 // 	if (token) {
@@ -127,7 +129,7 @@ class App extends React.Component {
             >
               <div>
                 <Link className="navbar-brand" to="/logout">
-                  Being Social
+                  Smart Grid
                 </Link>
               </div>
               <div>
@@ -165,6 +167,62 @@ class App extends React.Component {
             {/* A <Switch> looks through its children <Route>s and
 						renders the first one that matches the current URL. */}
             <Switch>
+              <PrivateRoute
+                path="/item/order"
+                render={props => {
+                  return (
+                    <Order setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
+              <PrivateRoute
+                path="/kids"
+                render={props => {
+                  return (
+                    <Product setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
+              <PrivateRoute
+                path="/sunglasses"
+                render={props => {
+                  return (
+                    <Product setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
+              <PrivateRoute
+                path="/topwears"
+                render={props => {
+                  return (
+                    <Product setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
+              <PrivateRoute
+                path="/watches"
+                render={props => {
+                  return (
+                    <Product setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
+              <PrivateRoute
+                path="/shoes"
+                render={props => {
+                  return (
+                    <Product setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
+              <PrivateRoute
+                path="/bottomwears"
+                render={props => {
+                  return (
+                    <Product setAuthenticated={this.updateState} {...props} />
+                  );
+                }}
+              />
               <PrivateRoute
                 path="/home"
                 render={props => {

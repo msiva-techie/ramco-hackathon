@@ -32,6 +32,7 @@ exports.getEloRating = function () {
 };
 exports.getResult = function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('req.body....', req.body);
         MongoClient.connect(url, function (err, client) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (err) {
@@ -57,7 +58,6 @@ exports.getResult = function (req, res) {
                     })
                         .toArray();
                     console.log('Found the following records');
-                    console.log(data[0].products[0]);
                     let vectors = [];
                     console.log('111111.....', data);
                     for (let i = 0; i < data.length; i++) {
