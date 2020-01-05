@@ -135,28 +135,19 @@ exports.getResult = function (req, res) {
                         console.log(areaOfTriangle);
                         console.log('result..', areaOfTriangle[0]);
                         let d1, d2, t1, t2;
-                        axios
-                            .post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].deliveryBoy.location[0]},${areaOfTriangle[0].deliveryBoy.location[1]}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`, {})
-                            .then(function (response) {
-                            console.log('location111....', response.data.response);
-                            d1 =
-                                response.data.response.route[0].summary.distance /
-                                    1000;
-                            t1 =
-                                response.data.response.route[0].summary.travelTime /
-                                    60;
-                        });
-                        axios
-                            .post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${req.body.latitude},${req.body.longitude}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`, {})
-                            .then(function (response) {
-                            console.log('location', response.data.response.route[0].summary);
-                            d2 =
-                                response.data.response.route[0].summary.distance /
-                                    1000;
-                            t2 =
-                                response.data.response.route[0].summary.travelTime /
-                                    60;
-                        });
+                        let output1 = yield axios.post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].deliveryBoy.location[0]},${areaOfTriangle[0].deliveryBoy.location[1]}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`, {});
+                        console.log('location111....', output1.data.response.route[0].summary);
+                        d1 = output1.data.response.route[0].summary.distance / 1000;
+                        t1 = output1.data.response.route[0].summary.travelTime / 60;
+                        console.log('val1....', areaOfTriangle[0].shop[0]);
+                        console.log('val2....', areaOfTriangle[0].shop[1]);
+                        console.log('val3.....', req.body.latitude);
+                        console.log('val4.....', req.body.longitude);
+                        console.log(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&waypoint1=geo!${req.body.latitude},${req.body.longitude}&mode=fastest;scooter;traffic:enabled`);
+                        let output2 = yield axios.post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&waypoint1=geo!${req.body.latitude},${req.body.longitude}&mode=fastest;scooter;traffic:enabled`, {});
+                        console.log('location', output2.data.response.route[0].summary);
+                        d2 = output2.data.response.route[0].summary.distance / 1000;
+                        t2 = output2.data.response.route[0].summary.travelTime / 60;
                         console.log('d1', d1);
                         console.log('d2', d2);
                         console.log('t1', t1);
@@ -164,7 +155,6 @@ exports.getResult = function (req, res) {
                         res.jsonp({
                             distance: d1 + d2,
                             ETA: t1 + t2,
-                            location: response.data.response,
                             result: areaOfTriangle[0]
                         });
                     }));
@@ -173,8 +163,6 @@ exports.getResult = function (req, res) {
                     res.jsonp({
                         err: err.toString()
                     });
-                }
-                finally {
                 }
             });
         });
