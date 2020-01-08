@@ -1,1 +1,1 @@
-# hackathon
+# hackathon - Smart Grid System
