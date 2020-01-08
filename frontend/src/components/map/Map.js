@@ -8,7 +8,7 @@ export class Map extends Component {
   render() {
     return (
       <Iframe
-        url="http://127.0.0.1:5500/demo.html"
+        url={`http://127.0.0.1:5500/demo.html?sourceLatitude=${this.props.sourceLatitude}&sourceLongitude=${this.props.sourceLongitude}&destinationLatitude=${this.props.destinationLatitude}&destinationLongitude=${this.props.destinationLongitude}`}
         width={this.props.width}
         height={this.props.height}
         id="myId"

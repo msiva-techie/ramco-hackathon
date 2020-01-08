@@ -25,7 +25,6 @@ export class Home extends Component {
           <div
             style={{
               marginLeft: "200px",
-              marginTop: "100px",
               display: "float",
               float: "left"
             }}
@@ -50,13 +49,12 @@ export class Home extends Component {
               onClick={() => {
                 this.props.history.push("/shoes");
               }}
+              style={{
+                color: "white",
+                backgroundColor: "black"
+              }}
             >
-              <span
-                style={{
-                  color: "white",
-                  backgroundColor: "black"
-                }}
-              >
+              <span>
                 Shoes
                 <img
                   src={require("./../../shoes.jpeg")}
@@ -151,7 +149,7 @@ export class Home extends Component {
                 />
               </span>
             </div>
-            <div style={{ display: "clear", marginBottom: "20px" }}></div>
+            <div style={{ clear: "both", marginBottom: "20px" }}></div>
             {/* <card1 heading="Watches" imgURL="./../../watch.jpeg" />
             <card1 heading="Shoes" imgURL="./../../shoes.jpeg" />
             <card1 heading="Top Wear" imgURL="./../../topWear.jpeg" />

@@ -31,11 +31,20 @@ export class Order extends Component {
         productName: this.productName,
         count: this.state.count
       });
-      this.setState({
-        ...this.state,
-        result: this.output,
-        order: false
-      });
+      if (this.output.stock === 0) {
+        this.setState({
+          ...this.state,
+          order: false
+        });
+        alert(this.output.message);
+      } else {
+        this.setState({
+          ...this.state,
+          result: this.output,
+          order: false
+        });
+      }
+
       console.log("output....", this.output);
     } else {
       alert("Location not available");
@@ -71,7 +80,7 @@ export class Order extends Component {
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title" style={{ textAlign: "center" }}>
-                  How much {this.productName} do you want?
+                  How many {this.productName} do you need?
                 </h5>
                 <p class="card-text" style={{ marginTop: "20px" }}>
                   <div className="quantity" style={{ fontSize: "50px" }}>
@@ -161,7 +170,8 @@ export class Order extends Component {
                       your order and he/she is on the way.
                     </li>
                     <li>
-                      Location of the Shop: {this.state.result.result.shop}
+                      Location of the Shop: {this.state.result.result.shop[0]}{" "}
+                      {this.state.result.result.shop[1]}
                     </li>
                     <li>
                       Your Location:{this.props.coords.latitude}{" "}
@@ -172,7 +182,14 @@ export class Order extends Component {
               </div>
             </div>
             <div className="map">
-              <Map height="500px" width="1100px" />
+              <Map
+                height="500px"
+                width="1100px"
+                sourceLatitude={this.state.result.result.shop[0]}
+                sourceLongitude={this.state.result.result.shop[1]}
+                destinationLatitude={this.props.coords.latitude}
+                destinationLongitude={this.props.coords.longitude}
+              />
             </div>
           </div>
         ) : (

@@ -57,6 +57,12 @@ exports.getResult = function (req, res) {
                         }
                     })
                         .toArray();
+                    if (data.length === 0) {
+                        return res.jsonp({
+                            message: 'Stock not available',
+                            stock: 0
+                        });
+                    }
                     console.log('Found the following records');
                     let vectors = [];
                     console.log('111111.....', data);
@@ -135,7 +141,11 @@ exports.getResult = function (req, res) {
                         console.log(areaOfTriangle);
                         console.log('result..', areaOfTriangle[0]);
                         let d1, d2, t1, t2;
-                        let output1 = yield axios.post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].deliveryBoy.location[0]},${areaOfTriangle[0].deliveryBoy.location[1]}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`, {});
+                        let output1 = yield axios
+                            .post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].deliveryBoy.location[0]},${areaOfTriangle[0].deliveryBoy.location[1]}&waypoint1=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&mode=fastest;scooter;traffic:enabled`, {})
+                            .catch(function (err) {
+                            console.log(err.toString());
+                        });
                         console.log('location111....', output1.data.response.route[0].summary);
                         d1 = output1.data.response.route[0].summary.distance / 1000;
                         t1 = output1.data.response.route[0].summary.travelTime / 60;
@@ -144,7 +154,11 @@ exports.getResult = function (req, res) {
                         console.log('val3.....', req.body.latitude);
                         console.log('val4.....', req.body.longitude);
                         console.log(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&waypoint1=geo!${req.body.latitude},${req.body.longitude}&mode=fastest;scooter;traffic:enabled`);
-                        let output2 = yield axios.post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&waypoint1=geo!${req.body.latitude},${req.body.longitude}&mode=fastest;scooter;traffic:enabled`, {});
+                        let output2 = yield axios
+                            .post(`https://route.ls.hereapi.com/routing/7.2/calculateroute.json?apiKey=WNZEnHXpkJZNU2PgJ7asjFO9W333rx352PUBT8XcRSQ&waypoint0=geo!${areaOfTriangle[0].shop[0]},${areaOfTriangle[0].shop[1]}&waypoint1=geo!${req.body.latitude},${req.body.longitude}&mode=fastest;scooter;traffic:enabled`, {})
+                            .catch(function (err) {
+                            console.log(err.toString());
+                        });
                         console.log('location', output2.data.response.route[0].summary);
                         d2 = output2.data.response.route[0].summary.distance / 1000;
                         t2 = output2.data.response.route[0].summary.travelTime / 60;
@@ -160,6 +174,7 @@ exports.getResult = function (req, res) {
                     }));
                 }
                 catch (err) {
+                    console.log('error.....', err.toString());
                     res.jsonp({
                         err: err.toString()
                     });
