@@ -14,6 +14,7 @@ import { isAuthenticated } from "./services/AuthenticationService";
 import Logout from "./components/logout/Logout";
 import Product from "./components/product/Product";
 import Order from "./components/order/Order";
+import Location from "./components/location/Location";
 // (function() {
 // 	const token = getToken();
 // 	if (token) {
@@ -128,7 +129,7 @@ class App extends React.Component {
               style={{ justifyContent: "space-between" }}
             >
               <div>
-                <Link className="navbar-brand" to="/logout">
+                <Link className="navbar-brand" to="/home">
                   Smart Grid
                 </Link>
               </div>

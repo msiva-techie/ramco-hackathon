@@ -5,6 +5,7 @@ import { Redirect } from "react-router-dom";
 export class Logout extends Component {
   constructor(props) {
     super(props);
+    localStorage.removeItem("productName");
   }
   render() {
     const p = this.props;
